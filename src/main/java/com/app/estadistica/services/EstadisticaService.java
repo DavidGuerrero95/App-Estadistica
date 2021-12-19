@@ -22,6 +22,7 @@ public class EstadisticaService implements IEstadisticaService {
 		List<String> promedioPonderadoString = new ArrayList<String>();
 		List<List<String>> tipoUno = new ArrayList<List<String>>();
 		for (int k = 0; k < preguntasRespuestas.getPreguntas().get(i).getOpciones().size(); k++) {
+			System.out.println("Opcion #:" + k);
 			int count90100 = 0;
 			int count8090 = 0;
 			int count7080 = 0;
@@ -65,10 +66,12 @@ public class EstadisticaService implements IEstadisticaService {
 					count010++;
 				}
 			}
-
+			System.out.println("Sin error hasta aqui");
 			total = count90100 * 95 + count8090 * 85 + count7080 * 75 + count6070 * 65 + count5060 * 55 + count4050 * 45
 					+ count3040 * 35 + count2030 * 25 + count1020 * 15 + count010 * 5;
-			Double resultadoPromedioPonderado = total / resultados.getNumeroPersonas();
+			Double resultadoPromedioPonderado = 0.00;
+			if (resultados.getNumeroPersonas() != 0)
+				resultadoPromedioPonderado = total / resultados.getNumeroPersonas();
 			BigDecimal bdlat = new BigDecimal(resultadoPromedioPonderado).setScale(2, RoundingMode.HALF_UP);
 
 			promedioPonderado.add(bdlat.doubleValue());
@@ -107,7 +110,11 @@ public class EstadisticaService implements IEstadisticaService {
 				promedio.set(k,
 						promedio.get(k) + Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)));
 			}
-			promedio.set(k, promedio.get(k) / resultados.getNumeroPersonas());
+			Integer numPersonas = resultados.getNumeroPersonas();
+			Double operacion = 0.0;
+			if (numPersonas != 0)
+				operacion = promedio.get(k) / resultados.getNumeroPersonas();
+			promedio.set(k, operacion);
 		}
 
 		for (Double d : promedio) {
@@ -160,7 +167,10 @@ public class EstadisticaService implements IEstadisticaService {
 		for (int j = 0; j < personasOpcion.size(); j++) {
 			double op1 = personasOpcion.get(j);
 			double op2 = resultados.getNumeroPersonas();
-			promedio.add((op1 / op2) * 100);
+			if (op2 != 0)
+				promedio.add((op1 / op2) * 100);
+			else
+				promedio.add(0.0);
 		}
 
 		for (Double d : promedio) {

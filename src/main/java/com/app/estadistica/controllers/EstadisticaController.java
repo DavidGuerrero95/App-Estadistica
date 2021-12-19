@@ -194,122 +194,124 @@ public class EstadisticaController {
 	@PutMapping("/estadistica/obtenerEstadistica/{nombre}")
 	@ResponseStatus(code = HttpStatus.OK)
 	public Boolean obtenerEstadistica(@PathVariable("nombre") String nombre) throws IOException {
-		try {
-			PreguntasRespuestas p = cbFactory.create("estadistica").run(
-					() -> prFeignClient.getProyectosByNombre(nombre), er -> obtenerPreguntasRespuestas(nombre, er));
-			Estadisticas e = eRepository.findByNombre(nombre);
-			Suscripciones s = cbFactory.create("estadistica").run(() -> sClient.obtenerSuscripcionesNombre(nombre),
-					er -> obtenerSuscripciones(nombre, er));
-			e.setNumeroSuscritas(s.getSuscripciones().size());
-			e.setLikes(s.getLike().size());
-			e.setDislikes(s.getDislike().size());
-			e.setNumeroComentarios(s.getComentarios().size());
-			e.setNumeroCuestionario(s.getCuestionarios().size());
-			List<Preguntas> preguntas = p.getPreguntas();
-			List<Integer> tipoPregunta = new ArrayList<Integer>();
-			List<String> enunciado = new ArrayList<String>();
-			List<Resultados> listaResultados = new ArrayList<Resultados>();
-			preguntas.forEach(i -> {
-				tipoPregunta.add(i.getTipoConsulta());
-				enunciado.add(i.getPregunta());
-			});
-			for (int i = 0; i < tipoPregunta.size(); i++) {
-				Resultados resultados = new Resultados();
-				resultados.setTipoConsulta(tipoPregunta.get(i));
-				resultados.setNumeroPersonas(s.getCuestionarios().size());
-				List<Double> promedioPonderado = new ArrayList<Double>();
-				List<Double> promedio = new ArrayList<Double>();
-				List<String> respuestas = new ArrayList<String>();
-				List<Integer> personasOpcion = new ArrayList<Integer>();
-				resultados.setEnunciado(enunciado.get(i));
-				resultados.setNumeroPersonas(p.getRespuestas().get(i).size());
-				resultados.setOpciones(p.getPreguntas().get(i).getOpciones());
-				switch (tipoPregunta.get(i)) {
-				case 1:
-					List<List<String>> tipoUno = eService.tipoUnoCuatro(i, p, resultados);
-					for (String d : tipoUno.get(0)) {
-						promedioPonderado.add(Double.parseDouble(d));
-					}
-					resultados.setPromedioPonderado(promedioPonderado);
-					resultados.setImpacto(tipoUno.get(1));
-					resultados.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
-					resultados.setMayorEscogida("-1");
-					resultados.setMenorEscogida("-1");
-					resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-					resultados.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
-					listaResultados.add(resultados);
-					break;
-				case 2:
-					List<List<String>> tipoDos = eService.tipoDos(i, p, resultados);
-
-					for (String d : tipoDos.get(0)) {
-						promedio.add(Double.parseDouble(d));
-					}
-					resultados.setMenorEscogida(tipoDos.get(1).get(0));
-					resultados.setMayorEscogida(tipoDos.get(1).get(1));
-					resultados.setPromedio(promedio);
-					resultados.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
-					resultados.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-					resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-					resultados.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
-					listaResultados.add(resultados);
-					break;
-				case 3:
-					List<List<String>> tipoTres = eService.tipoTres(i, p, resultados);
-					for (String d : tipoTres.get(0)) {
-						personasOpcion.add(Integer.valueOf(d));
-					}
-					for (String d : tipoTres.get(2)) {
-						promedio.add(Double.parseDouble(d));
-					}
-
-					resultados.setPersonasOpcion(personasOpcion);
-					resultados.setRespuestas(tipoTres.get(1));
-					resultados.setPromedio(promedio);
-					resultados.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
-					resultados.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-					resultados.setMayorEscogida("-1");
-					resultados.setMenorEscogida("-1");
-					listaResultados.add(resultados);
-					break;
-				case 4:
-					List<List<String>> tipoCuatro = eService.tipoUnoCuatro(i, p, resultados);
-					for (String d : tipoCuatro.get(0)) {
-						promedioPonderado.add(Double.parseDouble(d));
-					}
-					resultados.setPromedioPonderado(promedioPonderado);
-					resultados.setImpacto(tipoCuatro.get(1));
-					resultados.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
-					resultados.setMayorEscogida("-1");
-					resultados.setMenorEscogida("-1");
-					resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-					resultados.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
-					listaResultados.add(resultados);
-					break;
-				case 5:
-					for (int j = 0; j < p.getRespuestas().get(i).size(); j++) {
-						respuestas.add(p.getRespuestas().get(i).get(j).get(0));
-					}
-					resultados.setRespuestas(respuestas);
-					resultados.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
-					resultados.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-					resultados.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
-					resultados.setMayorEscogida("-1");
-					resultados.setMenorEscogida("-1");
-					resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-					listaResultados.add(resultados);
-					break;
-				default:
-					break;
-
+		// try {
+		PreguntasRespuestas p = cbFactory.create("estadistica").run(() -> prFeignClient.getProyectosByNombre(nombre),
+				er -> obtenerPreguntasRespuestas(nombre, er));
+		Estadisticas e = eRepository.findByNombre(nombre);
+		Suscripciones s = cbFactory.create("estadistica").run(() -> sClient.obtenerSuscripcionesNombre(nombre),
+				er -> obtenerSuscripciones(nombre, er));
+		e.setNumeroSuscritas(s.getSuscripciones().size());
+		e.setLikes(s.getLike().size());
+		e.setDislikes(s.getDislike().size());
+		e.setNumeroComentarios(s.getComentarios().size());
+		e.setNumeroCuestionario(s.getCuestionarios().size());
+		List<Preguntas> preguntas = p.getPreguntas();
+		List<Integer> tipoPregunta = new ArrayList<Integer>();
+		List<String> enunciado = new ArrayList<String>();
+		List<Resultados> listaResultados = new ArrayList<Resultados>();
+		preguntas.forEach(i -> {
+			tipoPregunta.add(i.getTipoConsulta());
+			enunciado.add(i.getPregunta());
+		});
+		for (int i = 0; i < tipoPregunta.size(); i++) {
+			System.out.println("Pregunta #" + (i + 1));
+			Resultados resultados = new Resultados();
+			resultados.setTipoConsulta(tipoPregunta.get(i));
+			resultados.setNumeroPersonas(s.getCuestionarios().size());
+			List<Double> promedioPonderado = new ArrayList<Double>();
+			List<Double> promedio = new ArrayList<Double>();
+			List<String> respuestas = new ArrayList<String>();
+			List<Integer> personasOpcion = new ArrayList<Integer>();
+			resultados.setEnunciado(enunciado.get(i));
+			resultados.setNumeroPersonas(p.getRespuestas().get(i).size());
+			resultados.setOpciones(p.getPreguntas().get(i).getOpciones());
+			switch (tipoPregunta.get(i)) {
+			case 1:
+				List<List<String>> tipoUno = eService.tipoUnoCuatro(i, p, resultados);
+				for (String d : tipoUno.get(0)) {
+					promedioPonderado.add(Double.parseDouble(d));
 				}
+				resultados.setPromedioPonderado(promedioPonderado);
+				resultados.setImpacto(tipoUno.get(1));
+				resultados.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultados.setMayorEscogida("-1");
+				resultados.setMenorEscogida("-1");
+				resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
+				resultados.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
+				listaResultados.add(resultados);
+				break;
+			case 2:
+				List<List<String>> tipoDos = eService.tipoDos(i, p, resultados);
+
+				for (String d : tipoDos.get(0)) {
+					promedio.add(Double.parseDouble(d));
+				}
+				resultados.setMenorEscogida(tipoDos.get(1).get(0));
+				resultados.setMayorEscogida(tipoDos.get(1).get(1));
+				resultados.setPromedio(promedio);
+				resultados.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultados.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
+				resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
+				resultados.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
+				listaResultados.add(resultados);
+				break;
+			case 3:
+				List<List<String>> tipoTres = eService.tipoTres(i, p, resultados);
+				for (String d : tipoTres.get(0)) {
+					personasOpcion.add(Integer.valueOf(d));
+				}
+				for (String d : tipoTres.get(2)) {
+					promedio.add(Double.parseDouble(d));
+				}
+
+				resultados.setPersonasOpcion(personasOpcion);
+				resultados.setRespuestas(tipoTres.get(1));
+				resultados.setPromedio(promedio);
+				resultados.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultados.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
+				resultados.setMayorEscogida("-1");
+				resultados.setMenorEscogida("-1");
+				listaResultados.add(resultados);
+				break;
+			case 4:
+				List<List<String>> tipoCuatro = eService.tipoUnoCuatro(i, p, resultados);
+				System.out.println("Completo eService");
+				for (String d : tipoCuatro.get(0)) {
+					promedioPonderado.add(Double.parseDouble(d));
+				}
+				resultados.setPromedioPonderado(promedioPonderado);
+				resultados.setImpacto(tipoCuatro.get(1));
+				resultados.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultados.setMayorEscogida("-1");
+				resultados.setMenorEscogida("-1");
+				resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
+				resultados.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
+				listaResultados.add(resultados);
+				break;
+			case 5:
+				for (int j = 0; j < p.getRespuestas().get(i).size(); j++) {
+					respuestas.add(p.getRespuestas().get(i).get(j).get(0));
+				}
+				resultados.setRespuestas(respuestas);
+				resultados.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultados.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
+				resultados.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultados.setMayorEscogida("-1");
+				resultados.setMenorEscogida("-1");
+				resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
+				listaResultados.add(resultados);
+				break;
+			default:
+				break;
+
 			}
-			e.setResultados(listaResultados);
-			eRepository.save(e);
-			return true;
-		} catch (Exception e) {
-			throw new IOException("Error obtener estadistica " + e.getMessage());
 		}
+		e.setResultados(listaResultados);
+		eRepository.save(e);
+		return true;
+		// } catch (Exception e) {
+		// throw new IOException("Error obtener estadistica " + e.getMessage());
+		// }
 
 	}
 
@@ -318,7 +320,11 @@ public class EstadisticaController {
 	public Boolean borrarEstadisticas(@PathVariable("nombre") String nombre) throws IOException {
 		try {
 			Estadisticas e = eRepository.findByNombre(nombre);
+			PreguntasRespuestas pr = prRepository.findByNombre(nombre);
+			Suscripciones s = sRepository.findByNombre(nombre);
 			eRepository.delete(e);
+			prRepository.delete(pr);
+			sRepository.delete(s);
 			return true;
 		} catch (Exception e) {
 			throw new IOException("Error borrar estadistica " + e.getMessage());
