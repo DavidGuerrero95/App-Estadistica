@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -269,6 +270,18 @@ public class EstadisticaService implements IEstadisticaService {
 				resultado.setMenorEscogida("-1");
 				resultado.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 				break;
+			case 6:
+				for (int j = 0; j < 6; j++) {
+					promedio.add((double) 0);
+				}
+				resultado.setPromedioPonderado(promedio);
+				resultado.setMayorEscogida("Sin respuestas");
+				resultado.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
+				resultado.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultado.setMenorEscogida("-1");
+				resultado.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
+				resultado.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
+				break;
 			default:
 				break;
 			}
@@ -277,4 +290,78 @@ public class EstadisticaService implements IEstadisticaService {
 		return lResultados;
 	}
 
+	
+	@Override
+	public List<Double> tipoSeisPrimero(List<List<String>> list) {
+		List<Double> respuesta = Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		for (int i = 0; i < list.size(); i++) {
+			switch (list.get(i).get(0)) {
+			case "1.0":
+				switch (list.get(i).get(1)) {
+				case "1.0":
+					respuesta.set(5, respuesta.get(5) + 1);
+					break;
+				default:
+					respuesta.set(4, respuesta.get(4) + 1);
+					break;
+				}
+				break;
+			case "5.0":
+				switch (list.get(i).get(1)) {
+				case "1.0":
+					respuesta.set(1, respuesta.get(1) + 1);
+					break;
+				case "5.0":
+					respuesta.set(5, respuesta.get(5) + 1);
+					break;
+				default:
+					respuesta.set(0, respuesta.get(0) + 1);
+					break;
+				}
+				break;
+			default:
+				switch (list.get(i).get(1)) {
+				case "1.0":
+					respuesta.set(2, respuesta.get(2) + 1);
+					break;
+				case "5.0":
+					respuesta.set(4, respuesta.get(4) + 1);
+					break;
+				default:
+					respuesta.set(3, respuesta.get(3) + 1);
+					break;
+				}
+				break;
+			}
+		}
+		return respuesta;
+	}
+
+	@Override
+	public String tipoSeisSegundo(List<Double> list) {
+		Double valor = Collections.max(list);
+		if (valor == 0.0)
+			return "Cuestionable";
+		int pos = list.indexOf(valor);
+		for (int i = (pos + 1); i < list.size(); i++) {
+			if (valor == list.get(i)) {
+				pos = list.indexOf(list.get(i));
+				i = pos;
+			}
+		}
+		switch (pos) {
+		case 0:
+			return "Atractiva";
+		case 1:
+			return "Gusta";
+		case 2:
+			return "Basica";
+		case 3:
+			return "Indeferente";
+		case 4:
+			return "No Gusta";
+		default:
+			return "Cuestionable";
+		}
+	}
 }

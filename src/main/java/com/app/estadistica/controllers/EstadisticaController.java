@@ -301,6 +301,19 @@ public class EstadisticaController {
 				resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 				listaResultados.add(resultados);
 				break;
+			case 6:
+				List<Double> resultadoPersonas = eService.tipoSeisPrimero(p.getRespuestas().get(i));
+				resultados.setPromedioPonderado(resultadoPersonas);
+				System.out.println(resultados.getPromedioPonderado());
+				resultados.setMayorEscogida(eService.tipoSeisSegundo(resultadoPersonas));
+				System.out.println(resultados.getPromedioPonderado());
+				resultados.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
+				resultados.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
+				resultados.setMenorEscogida("-1");
+				resultados.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
+				resultados.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
+				listaResultados.add(resultados);
+				break;
 			default:
 				break;
 

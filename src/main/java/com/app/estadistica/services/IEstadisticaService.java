@@ -14,6 +14,10 @@ public interface IEstadisticaService {
 	public List<List<String>> tipoTres(int i, PreguntasRespuestas preguntasRespuestas, Resultados resultados);
 
 	public List<Resultados> obtenerPreguntasCreacion(PreguntasRespuestas p);
+	
+	public List<Double> tipoSeisPrimero(List<List<String>> list);
+
+	public String tipoSeisSegundo(List<Double> list);
 
 
 }
