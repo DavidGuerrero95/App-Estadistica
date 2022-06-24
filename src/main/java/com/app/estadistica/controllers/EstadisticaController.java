@@ -31,10 +31,12 @@ import com.app.estadistica.models.Estadisticas;
 import com.app.estadistica.models.EstadisticasUsuarios;
 import com.app.estadistica.models.PreguntasRespuestas;
 import com.app.estadistica.models.Suscripciones;
+import com.app.estadistica.repository.ComentariosRepository;
 import com.app.estadistica.repository.EstadisticasRepository;
 import com.app.estadistica.repository.EstadisticasUsuarioRepository;
 import com.app.estadistica.repository.PreguntasRespuestasRepository;
 import com.app.estadistica.repository.SuscripcionesRepository;
+import com.app.estadistica.request.Comentarios;
 import com.app.estadistica.request.Preguntas;
 import com.app.estadistica.request.Resultados;
 import com.app.estadistica.services.IEstadisticaService;
@@ -69,6 +71,9 @@ public class EstadisticaController {
 
 	@Autowired
 	SuscripcionesFeignClient sClient;
+	
+	@Autowired
+	ComentariosRepository cRepository;
 
 	@DeleteMapping("/estadistica/usuarios/borrarEstadisticas/")
 	@ResponseStatus(code = HttpStatus.OK)
@@ -200,10 +205,12 @@ public class EstadisticaController {
 		Estadisticas e = eRepository.findByNombre(nombre);
 		Suscripciones s = cbFactory.create("estadistica").run(() -> sClient.obtenerSuscripcionesNombre(nombre),
 				er -> obtenerSuscripciones(nombre, er));
+		List<Comentarios> c = cbFactory.create("estadistica").run(() -> sClient.obtenerComentariosNombre(nombre),
+				er -> obtenerComentarios(nombre, er));
 		e.setNumeroSuscritas(s.getSuscripciones().size());
 		e.setLikes(s.getLike().size());
 		e.setDislikes(s.getDislike().size());
-		e.setNumeroComentarios(s.getComentarios().size());
+		e.setNumeroComentarios(c.size());
 		e.setNumeroCuestionario(s.getCuestionarios().size());
 		List<Preguntas> preguntas = p.getPreguntas();
 		List<Integer> tipoPregunta = new ArrayList<Integer>();
@@ -405,6 +412,36 @@ public class EstadisticaController {
 		}
 
 	}
+	
+	@PutMapping("/estadistica/suscripciones/comentarios/editar/")
+	public Boolean editarSuscripcionesComentarios(@RequestBody Comentarios pr) throws IOException {
+		try {
+			cRepository.save(pr);
+			return true;
+		} catch (Exception e) {
+			throw new IOException("Error editar comentarios, estadistica " + e.getMessage());
+		}
+	}
+	
+	@DeleteMapping("/estadistica/suscripciones/comentarios/eliminar/")
+	public Boolean eliminarComentarioId(@RequestParam String id) throws IOException {
+		try {
+			cRepository.deleteById(id);
+			return true;
+		} catch (Exception e) {
+			throw new IOException("Error eliminar un comentario, estadistica " + e.getMessage());
+		}
+	}
+	
+	@DeleteMapping("/estadistica/suscripciones/comentarios/eliminar/todos/")
+	public Boolean eliminarAllComentario(@RequestParam String nombre) throws IOException {
+		try {
+			cRepository.deleteAllByNombre(nombre);
+			return true;
+		} catch (Exception e) {
+			throw new IOException("Error eliminar todos comentarios, estadistica " + e.getMessage());
+		}
+	}
 
 	private PreguntasRespuestas obtenerPreguntasRespuestas(String nombre, Throwable e) {
 		logger.info(e.getMessage());
@@ -414,6 +451,22 @@ public class EstadisticaController {
 	private Suscripciones obtenerSuscripciones(String nombre, Throwable e) {
 		logger.info(e.getMessage());
 		return sRepository.findByNombre(nombre);
+	}
+	
+	private List<Comentarios> obtenerComentarios(String nombre, Throwable e) {
+		logger.info(e.getMessage());
+		return cRepository.findByNombre(nombre);
+	}
+	
+	@DeleteMapping("/estadistica/eliminar/all/usuarios/")
+	@ResponseStatus(code = HttpStatus.ACCEPTED)
+	public Boolean eliminarAllUsuario() throws IOException {
+		try {
+			euRepository.deleteAll();
+			return true;
+		} catch (Exception e) {
+			throw new IOException("Error: " + e.getMessage());
+		}
 	}
 
 }

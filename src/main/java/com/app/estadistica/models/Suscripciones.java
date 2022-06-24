@@ -29,20 +29,17 @@ public class Suscripciones {
 
 	private List<String> dislike;
 
-	private List<List<String>> comentarios;
-
 	public Suscripciones() {
 	}
 
 	public Suscripciones(String nombre, List<String> suscripciones, List<String> cuestionarios, List<String> like,
-			List<String> dislike, List<List<String>> comentarios) {
+			List<String> dislike) {
 		super();
 		this.nombre = nombre;
 		this.suscripciones = suscripciones;
 		this.cuestionarios = cuestionarios;
 		this.like = like;
 		this.dislike = dislike;
-		this.comentarios = comentarios;
 	}
 
 	public String getId() {
@@ -91,14 +88,6 @@ public class Suscripciones {
 
 	public void setDislike(List<String> dislike) {
 		this.dislike = dislike;
-	}
-
-	public List<List<String>> getComentarios() {
-		return comentarios;
-	}
-
-	public void setComentarios(List<List<String>> comentarios) {
-		this.comentarios = comentarios;
 	}
 
 }

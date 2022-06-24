@@ -1,4 +1,5 @@
 com\app\estadistica\services\UserExcelExporter.class
+com\app\estadistica\repository\ComentariosRepository.class
 com\app\estadistica\config\SwaggerConfiguration.class
 com\app\estadistica\models\Estadisticas.class
 com\app\estadistica\services\EstadisticaService.class
@@ -12,6 +13,7 @@ com\app\estadistica\request\Suscripciones.class
 com\app\estadistica\models\EstadisticasUsuarios.class
 com\app\estadistica\repository\EstadisticasRepository.class
 com\app\estadistica\clients\PreguntasRespuestasFeignClient.class
+com\app\estadistica\request\Comentarios.class
 com\app\estadistica\request\Resultados.class
 com\app\estadistica\repository\PreguntasRespuestasRepository.class
 com\app\estadistica\controllers\EstadisticaController.class
