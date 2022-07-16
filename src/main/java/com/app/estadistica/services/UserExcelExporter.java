@@ -1,6 +1,5 @@
 package com.app.estadistica.services;
 
-
 import java.io.IOException;
 
 import javax.servlet.ServletOutputStream;
@@ -67,7 +66,7 @@ public class UserExcelExporter {
 		Row row = sheet.createRow(rowCount++);
 		int columnCount = 0;
 
-		createCell(row, columnCount++, listUsers.getNombre(), style);
+		createCell(row, columnCount++, listUsers.getIdProyecto(), style);
 		createCell(row, columnCount++, listUsers.getVisualizaciones(), style);
 		createCell(row, columnCount++, listUsers.getLikes(), style);
 		createCell(row, columnCount++, listUsers.getDislikes(), style);

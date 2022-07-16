@@ -1,367 +1,108 @@
 package com.app.estadistica.services;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import com.app.estadistica.models.PreguntasRespuestas;
-import com.app.estadistica.request.Resultados;
+import com.app.estadistica.clients.RespuestasFeignClient;
+import com.app.estadistica.clients.SuscripcionesFeignClient;
+import com.app.estadistica.models.Estadisticas;
+import com.app.estadistica.models.Resultados;
+import com.app.estadistica.repository.EstadisticasRepository;
+import com.app.estadistica.requests.Suscripciones;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class EstadisticaService implements IEstadisticaService {
 
+	@SuppressWarnings("rawtypes")
+	@Autowired
+	private CircuitBreakerFactory cbFactory;
+
+	@Autowired
+	EstadisticasRepository eRepository;
+
+	@Autowired
+	SuscripcionesFeignClient sClient;
+
+	@Autowired
+	RespuestasFeignClient rClient;
+
+	@Autowired
+	IResultadosServices rServices;
+
 	@Override
-	public List<List<String>> tipoUnoCuatro(int i, PreguntasRespuestas preguntasRespuestas, Resultados resultados) {
-		List<Double> promedioPonderado = new ArrayList<Double>();
-		List<String> impacto = new ArrayList<String>();
-		List<String> promedioPonderadoString = new ArrayList<String>();
-		List<List<String>> tipoUno = new ArrayList<List<String>>();
-		for (int k = 0; k < preguntasRespuestas.getPreguntas().get(i).getOpciones().size(); k++) {
-			System.out.println("Opcion #:" + k);
-			int count90100 = 0;
-			int count8090 = 0;
-			int count7080 = 0;
-			int count6070 = 0;
-			int count5060 = 0;
-			int count4050 = 0;
-			int count3040 = 0;
-			int count2030 = 0;
-			int count1020 = 0;
-			int count010 = 0;
-			double total = 0.0;
-			for (int j = 0; j < preguntasRespuestas.getRespuestas().get(i).size(); j++) {
-				if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 90
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) <= 100) {
-					count90100++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 80
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 90) {
-					count8090++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 70
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 80) {
-					count7080++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 60
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 70) {
-					count6070++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 50
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 60) {
-					count5060++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 40
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 50) {
-					count4050++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 30
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 40) {
-					count3040++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 20
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 30) {
-					count2030++;
-				} else if (Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) >= 10
-						&& Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)) < 20) {
-					count1020++;
-				} else {
-					count010++;
-				}
-			}
-			System.out.println("Sin error hasta aqui");
-			total = count90100 * 95 + count8090 * 85 + count7080 * 75 + count6070 * 65 + count5060 * 55 + count4050 * 45
-					+ count3040 * 35 + count2030 * 25 + count1020 * 15 + count010 * 5;
-			Double resultadoPromedioPonderado = 0.00;
-			if (resultados.getNumeroPersonas() != 0)
-				resultadoPromedioPonderado = total / resultados.getNumeroPersonas();
-			BigDecimal bdlat = new BigDecimal(resultadoPromedioPonderado).setScale(2, RoundingMode.HALF_UP);
-
-			promedioPonderado.add(bdlat.doubleValue());
-		}
-		for (int j = 0; j < promedioPonderado.size(); j++) {
-			if (promedioPonderado.get(j) >= 80) {
-				impacto.add("Excelente impacto");
-			} else if (promedioPonderado.get(j) >= 60) {
-				impacto.add("Alto impacto");
-			} else if (promedioPonderado.get(j) >= 40) {
-				impacto.add("Medio impacto");
-			} else if (promedioPonderado.get(j) >= 20) {
-				impacto.add("Bajo impacto");
-			} else {
-				impacto.add("Pesimo impacto");
-			}
-		}
-
-		for (Double d : promedioPonderado) {
-			promedioPonderadoString.add(d.toString());
-		}
-		tipoUno.add(promedioPonderadoString);
-		tipoUno.add(impacto);
-		return tipoUno;
+	public void crearEstadisticas(Integer idProyecto) {
+		Estadisticas e = new Estadisticas();
+		e.setIdProyecto(idProyecto);
+		e.setVisualizaciones(0);
+		e.setLikes(0);
+		e.setDislikes(0);
+		e.setNumeroSuscritas(0);
+		e.setNumeroCuestionario(0);
+		e.setNumeroComentarios(0);
+		e.setResultados(new ArrayList<Resultados>());
+		eRepository.save(e);
 	}
 
 	@Override
-	public List<List<String>> tipoDos(int i, PreguntasRespuestas preguntasRespuestas, Resultados resultados) {
-		List<Double> promedio = new ArrayList<Double>();
-		List<String> promedioString = new ArrayList<String>();
-		List<String> menorMayor = new ArrayList<String>();
-		List<List<String>> tipoDos = new ArrayList<List<String>>();
-		for (int k = 0; k < preguntasRespuestas.getPreguntas().get(i).getOpciones().size(); k++) {
-			promedio.add(0.0);
-			for (int j = 0; j < preguntasRespuestas.getRespuestas().get(i).size(); j++) {
-				promedio.set(k,
-						promedio.get(k) + Double.parseDouble(preguntasRespuestas.getRespuestas().get(i).get(j).get(k)));
-			}
-			Integer numPersonas = resultados.getNumeroPersonas();
-			Double operacion = 0.0;
-			if (numPersonas != 0)
-				operacion = promedio.get(k) / resultados.getNumeroPersonas();
-			promedio.set(k, operacion);
-		}
-
-		for (Double d : promedio) {
-			BigDecimal bdlat = new BigDecimal(d).setScale(2, RoundingMode.HALF_UP);
-			Double d2 = bdlat.doubleValue();
-			promedioString.add(d2.toString());
-		}
-
-		tipoDos.add(promedioString);
-		menorMayor.add(
-				resultados.getOpciones().get(promedio.indexOf(promedio.stream().min(Comparator.naturalOrder()).get())));
-		menorMayor.add(
-				resultados.getOpciones().get(promedio.indexOf(promedio.stream().max(Comparator.naturalOrder()).get())));
-		tipoDos.add(menorMayor);
-		return tipoDos;
+	public void aumentarVisualizacion(Integer idProyecto) {
+		Estadisticas estadisticas = eRepository.findByIdProyecto(idProyecto);
+		Integer visualizacion = estadisticas.getVisualizaciones();
+		visualizacion++;
+		estadisticas.setVisualizaciones(visualizacion);
+		eRepository.save(estadisticas);
 	}
 
 	@Override
-	public List<List<String>> tipoTres(int i, PreguntasRespuestas preguntasRespuestas, Resultados resultados) {
-		List<Integer> personasOpcion = new ArrayList<Integer>();
-		List<String> personasOpcionString = new ArrayList<String>();
-		List<Double> promedioOpcion3 = new ArrayList<Double>();
-		List<String> respuestas = new ArrayList<String>();
-		List<Double> promedio = new ArrayList<Double>();
-		List<String> promedioString = new ArrayList<String>();
-		List<List<String>> tipoTres = new ArrayList<List<String>>();
-
-		for (int j = 0; j < resultados.getOpciones().size(); j++) {
-			promedioOpcion3.add(0.0);
-		}
-		for (int j = 0; j < preguntasRespuestas.getRespuestas().get(i).size(); j++) {
-			for (int k = 0; k < preguntasRespuestas.getRespuestas().get(i).get(j).size(); k++) {
-				if (resultados.getOpciones().contains(preguntasRespuestas.getRespuestas().get(i).get(j).get(k))) {
-					int index = resultados.getOpciones()
-							.indexOf(preguntasRespuestas.getRespuestas().get(i).get(j).get(k));
-					promedioOpcion3.set(index, promedioOpcion3.get(index) + 1);
-				} else {
-					respuestas.add(preguntasRespuestas.getRespuestas().get(i).get(j).get(k));
-				}
-			}
-		}
-		for (Double d : promedioOpcion3) {
-			personasOpcion.add(d.intValue());
-		}
-
-		for (Integer d : personasOpcion) {
-			personasOpcionString.add(d.toString());
-		}
-
-		for (int j = 0; j < personasOpcion.size(); j++) {
-			double op1 = personasOpcion.get(j);
-			double op2 = resultados.getNumeroPersonas();
-			if (op2 != 0)
-				promedio.add((op1 / op2) * 100);
-			else
-				promedio.add(0.0);
-		}
-
-		for (Double d : promedio) {
-			BigDecimal bdlat = new BigDecimal(d).setScale(2, RoundingMode.HALF_UP);
-			Double d2 = bdlat.doubleValue();
-			promedioString.add(d2.toString());
-		}
-
-		tipoTres.add(personasOpcionString);
-		tipoTres.add(respuestas);
-		tipoTres.add(promedioString);
-
-		return tipoTres;
+	public Integer verVisualizaciones(Integer idProyecto) {
+		Estadisticas estadisticas = eRepository.findByIdProyecto(idProyecto);
+		return estadisticas.getVisualizaciones();
 	}
 
 	@Override
-	public List<Resultados> obtenerPreguntasCreacion(PreguntasRespuestas p) {
+	public void obtenerEstadistica(Integer idProyecto, Integer formulario) {
+		if (cbFactory.create("estadistica").run(() -> rClient.respuestasProyectoExisten(idProyecto, formulario),
+				er -> existsRespuestas(idProyecto, formulario, er))) {
+			Estadisticas e = eRepository.findByIdProyecto(idProyecto);
+			Suscripciones s = cbFactory.create("estadistica").run(() -> sClient.obtenerSuscripcionesNombre(idProyecto),
+					er -> obtenerSuscripciones(idProyecto, er));
+			Integer c = cbFactory.create("estadistica").run(() -> sClient.obtenerComentariosNombre(idProyecto),
+					er -> obtenerComentarios(idProyecto, er));
+			e.setNumeroSuscritas(s.getSuscripciones().size());
+			e.setLikes(s.getLike().size());
+			e.setDislikes(s.getDislike().size());
+			e.setNumeroComentarios(c);
+			e.setNumeroCuestionario(s.getCuestionarios().size());
+			List<Resultados> listaResultados = rServices.obtenerResultados(idProyecto, formulario);
+			e.setResultados(listaResultados);
+			eRepository.save(e);
+		}
 
-		List<Resultados> lResultados = new ArrayList<Resultados>();
-		p.getPreguntas().forEach(i -> {
-			List<Double> promedioPonderado = new ArrayList<Double>();
-			List<Double> promedio = new ArrayList<Double>();
-			List<Integer> personasOpcion = new ArrayList<Integer>();
-			List<String> respuestas = new ArrayList<String>();
-			Resultados resultado = new Resultados();
-			resultado.setEnunciado(i.getPregunta());
-			resultado.setTipoConsulta(i.getTipoConsulta());
-			resultado.setOpciones(i.getOpciones());
-			resultado.setNumeroPersonas(p.getRespuestas().size());
-			switch (i.getTipoConsulta()) {
-			case 1:
-				List<List<String>> tipoUno = tipoUnoCuatro(p.getPreguntas().indexOf(i), p, resultado);
-				for (String d : tipoUno.get(0)) {
-					promedioPonderado.add(Double.parseDouble(d));
-				}
-				;
-				resultado.setPromedioPonderado(promedioPonderado);
-				resultado.setImpacto(tipoUno.get(1));
-				resultado.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
-				resultado.setMayorEscogida("-1");
-				resultado.setMenorEscogida("-1");
-				resultado.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-				resultado.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
-				break;
-			case 2:
-				List<List<String>> tipoDos = tipoDos(p.getPreguntas().indexOf(i), p, resultado);
-				for (String d : tipoDos.get(0)) {
-					promedio.add(Double.parseDouble(d));
-				}
-				resultado.setPromedio(promedio);
-				resultado.setMayorEscogida(tipoDos.get(1).get(1));
-				resultado.setMenorEscogida(tipoDos.get(1).get(0));
-				resultado.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
-				resultado.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-				resultado.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-				resultado.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
-				break;
-			case 3:
-				List<List<String>> tipoTres = tipoTres(p.getPreguntas().indexOf(i), p, resultado);
-				for (String d : tipoTres.get(0)) {
-					personasOpcion.add(Integer.valueOf(d));
-				}
-				for (String d : tipoTres.get(2)) {
-					promedio.add(Double.parseDouble(d));
-				}
-				resultado.setPersonasOpcion(personasOpcion);
-				resultado.setRespuestas(tipoTres.get(1));
-				resultado.setPromedio(promedio);
-				resultado.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
-				resultado.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-				resultado.setMayorEscogida("-1");
-				resultado.setMenorEscogida("-1");
-				break;
-			case 4:
-				List<List<String>> tipoCuatro = tipoUnoCuatro(p.getPreguntas().indexOf(i), p, resultado);
-				for (String d : tipoCuatro.get(0)) {
-					promedioPonderado.add(Double.parseDouble(d));
-				}
-				resultado.setPromedioPonderado(promedioPonderado);
-				resultado.setImpacto(tipoCuatro.get(1));
-				resultado.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
-				resultado.setMayorEscogida("-1");
-				resultado.setMenorEscogida("-1");
-				resultado.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-				resultado.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
-				break;
-			case 5:
-				for (int j = 0; j < p.getRespuestas().size(); j++) {
-					respuestas.add(p.getRespuestas().get(p.getPreguntas().indexOf(i)).get(j).get(0));
-				}
-				resultado.setRespuestas(respuestas);
-				resultado.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
-				resultado.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-				resultado.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
-				resultado.setMayorEscogida("-1");
-				resultado.setMenorEscogida("-1");
-				resultado.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-				break;
-			case 6:
-				for (int j = 0; j < 6; j++) {
-					promedio.add((double) 0);
-				}
-				resultado.setPromedioPonderado(promedio);
-				resultado.setMayorEscogida("Sin respuestas");
-				resultado.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-				resultado.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
-				resultado.setMenorEscogida("-1");
-				resultado.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
-				resultado.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
-				break;
-			default:
-				break;
-			}
-			lResultados.add(resultado);
-		});
-		return lResultados;
 	}
 
-	
-	@Override
-	public List<Double> tipoSeisPrimero(List<List<String>> list) {
-		List<Double> respuesta = Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-		for (int i = 0; i < list.size(); i++) {
-			switch (list.get(i).get(0)) {
-			case "1.0":
-				switch (list.get(i).get(1)) {
-				case "1.0":
-					respuesta.set(5, respuesta.get(5) + 1);
-					break;
-				default:
-					respuesta.set(4, respuesta.get(4) + 1);
-					break;
-				}
-				break;
-			case "5.0":
-				switch (list.get(i).get(1)) {
-				case "1.0":
-					respuesta.set(1, respuesta.get(1) + 1);
-					break;
-				case "5.0":
-					respuesta.set(5, respuesta.get(5) + 1);
-					break;
-				default:
-					respuesta.set(0, respuesta.get(0) + 1);
-					break;
-				}
-				break;
-			default:
-				switch (list.get(i).get(1)) {
-				case "1.0":
-					respuesta.set(2, respuesta.get(2) + 1);
-					break;
-				case "5.0":
-					respuesta.set(4, respuesta.get(4) + 1);
-					break;
-				default:
-					respuesta.set(3, respuesta.get(3) + 1);
-					break;
-				}
-				break;
-			}
-		}
-		return respuesta;
+//  ****************************	FUNCIONES TOLERANCIA A FALLOS	***********************************  //
+
+	private Boolean existsRespuestas(Integer idProyecto, Integer formulario, Throwable er) {
+		log.info(er.getMessage());
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Servicio Respuestas no esta disponible");
 	}
 
-	@Override
-	public String tipoSeisSegundo(List<Double> list) {
-		Double valor = Collections.max(list);
-		if (valor == 0.0)
-			return "Cuestionable";
-		int pos = list.indexOf(valor);
-		for (int i = (pos + 1); i < list.size(); i++) {
-			if (valor == list.get(i)) {
-				pos = list.indexOf(list.get(i));
-				i = pos;
-			}
-		}
-		switch (pos) {
-		case 0:
-			return "Atractiva";
-		case 1:
-			return "Gusta";
-		case 2:
-			return "Basica";
-		case 3:
-			return "Indeferente";
-		case 4:
-			return "No Gusta";
-		default:
-			return "Cuestionable";
-		}
+	private Suscripciones obtenerSuscripciones(Integer idProyecto, Throwable e) {
+		log.info(e.getMessage());
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Servicio Suscripciones no esta disponible");
 	}
+
+	private Integer obtenerComentarios(Integer idProyecto, Throwable e) {
+		log.info(e.getMessage());
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Servicio Suscripciones no esta disponible");
+	}
+
 }
