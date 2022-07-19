@@ -23,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.app.estadistica.models.Estadisticas;
 import com.app.estadistica.models.EstadisticasUsuarios;
+import com.app.estadistica.models.Resultados;
 import com.app.estadistica.repository.EstadisticasRepository;
 import com.app.estadistica.repository.EstadisticasUsuarioRepository;
 import com.app.estadistica.repository.ResultadosRepository;
@@ -133,13 +134,27 @@ public class EstadisticaController {
 	}
 
 	// MICROSERVICIO RESPUESTAS -> CALCULAR ESTADISTICA
-	// MICROSERVICIO ESTADISTICA DASHBOARD -> CALCULAR ESTADISTICA
+	// MICROSERVICIO ESTADISTICA DASHBOARD -> CALCULAR ESTADISTICA <-- ARREGLAR
 	@PutMapping("/estadisticas/{idProyecto}/{formulario}/")
-	public Boolean obtenerEstadistica(@PathVariable("idProyecto") Integer idProyecto,
-			@PathVariable("formulario") Integer formulario) throws IOException {
+	public Boolean obtenerEstadisticaResultado(@PathVariable("idProyecto") Integer idProyecto,
+			@PathVariable("formulario") Integer formulario, @RequestParam("numeroPregunta") Integer numeroPregunta)
+			throws IOException {
 		try {
 			if (eRepository.existsByIdProyecto(idProyecto)) {
-				eService.obtenerEstadistica(idProyecto, formulario);
+				rServices.obtenerEstadisticaResultados(idProyecto, formulario, numeroPregunta);
+				return true;
+			}
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El Proyecto no existe");
+		} catch (Exception e) {
+			throw new IOException("Error obtener estadistica " + e.getMessage());
+		}
+	}
+
+	@PutMapping("/estadisticas/{idProyecto}/")
+	public Boolean obtenerEstadisticaProyecto(@PathVariable("idProyecto") Integer idProyecto) throws IOException {
+		try {
+			if (eRepository.existsByIdProyecto(idProyecto)) {
+				eService.obtenerEstadisticaProyecto(idProyecto);
 				return true;
 			}
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El Proyecto no existe");
@@ -151,11 +166,14 @@ public class EstadisticaController {
 	// MICROSERVICIO ESTADISTICA DASHBOARD -> OBTENER ESTADISTICA
 	// VER ESTADISTICA
 	@GetMapping("/estadisticas/proyecto/{idProyecto}/formulario/{formulario}")
+	@ResponseStatus(code = HttpStatus.OK)
 	public Estadisticas verEstadistica(@PathVariable("idProyecto") Integer idProyecto,
 			@PathVariable("formulario") Integer formulario) throws IOException {
 		try {
-			obtenerEstadistica(idProyecto, formulario);
-			return eRepository.findByIdProyecto(idProyecto);
+			if (eRepository.existsByIdProyecto(idProyecto)) {
+				return eService.verEstadistica(idProyecto, formulario);
+			}
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El Proyecto no existe");
 		} catch (Exception e) {
 			throw new IOException("Error ver estadistica: " + e.getMessage());
 		}
@@ -219,7 +237,45 @@ public class EstadisticaController {
 					mensajeImpacto);
 			return true;
 		} catch (Exception e) {
-			throw new IOException("Error aumentar visualizaciones: " + e.getMessage());
+			throw new IOException("Error Crear pregunta: " + e.getMessage());
+		}
+	}
+
+	@GetMapping("/resultados/ver/{idProyecto}")
+	public Resultados verResultados(@PathVariable("idProyecto") Integer idProyecto,
+			@RequestParam("formulario") Integer formulario, @RequestParam("numeroPregunta") Integer numeroPregunta) {
+		if (rRepository.existsByIdProyectoAndFormularioAndNumeroPregunta(idProyecto, formulario, numeroPregunta)) {
+			return rRepository.findByIdProyectoAndFormularioAndNumeroPregunta(idProyecto, formulario, numeroPregunta);
+		}
+		throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resultado no existe");
+	}
+
+	@DeleteMapping("/estadisticas/formularios/eliminar-pregunta/{idProyecto}")
+	public Boolean elimininarFormularioPregunta(@PathVariable("idProyecto") Integer idProyecto,
+			@RequestParam("formulario") Integer formulario, @RequestParam("numeroPregunta") Integer numeroPregunta)
+			throws IOException {
+		try {
+			if (rRepository.existsByIdProyectoAndFormularioAndNumeroPregunta(idProyecto, formulario, numeroPregunta)) {
+				rRepository.deleteByIdProyectoAndFormularioAndNumeroPregunta(idProyecto, formulario, numeroPregunta);
+				return true;
+			} else
+				return false;
+		} catch (Exception e) {
+			throw new IOException("Error borrar estadistica " + e.getMessage());
+		}
+	}
+
+	@DeleteMapping("/estadisticas/formularios/eliminar-preguntas/{idProyecto}")
+	public Boolean elimininarFormulario(@PathVariable("idProyecto") Integer idProyecto,
+			@RequestParam("formulario") Integer formulario) throws IOException {
+		try {
+			if (rRepository.existsByIdProyectoAndFormulario(idProyecto, formulario)) {
+				rRepository.deleteByIdProyectoAndFormulario(idProyecto, formulario);
+				return true;
+			} else
+				return false;
+		} catch (Exception e) {
+			throw new IOException("Error borrar estadistica " + e.getMessage());
 		}
 	}
 

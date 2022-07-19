@@ -1,5 +1,6 @@
 package com.app.estadistica.services;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import com.app.estadistica.clients.SuscripcionesFeignClient;
 import com.app.estadistica.models.Estadisticas;
 import com.app.estadistica.models.Resultados;
 import com.app.estadistica.repository.EstadisticasRepository;
+import com.app.estadistica.repository.ResultadosRepository;
 import com.app.estadistica.requests.Suscripciones;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,9 @@ public class EstadisticaService implements IEstadisticaService {
 
 	@Autowired
 	EstadisticasRepository eRepository;
+
+	@Autowired
+	ResultadosRepository rRepository;
 
 	@Autowired
 	SuscripcionesFeignClient sClient;
@@ -68,9 +73,8 @@ public class EstadisticaService implements IEstadisticaService {
 	}
 
 	@Override
-	public void obtenerEstadistica(Integer idProyecto, Integer formulario) {
-		if (cbFactory.create("estadistica").run(() -> rClient.respuestasProyectoExisten(idProyecto, formulario),
-				er -> existsRespuestas(idProyecto, formulario, er))) {
+	public void obtenerEstadisticaProyecto(Integer idProyecto) throws IOException, ResponseStatusException {
+		if (eRepository.existsByIdProyecto(idProyecto)) {
 			Estadisticas e = eRepository.findByIdProyecto(idProyecto);
 			Suscripciones s = cbFactory.create("estadistica").run(() -> sClient.obtenerSuscripcionesNombre(idProyecto),
 					er -> obtenerSuscripciones(idProyecto, er));
@@ -81,19 +85,23 @@ public class EstadisticaService implements IEstadisticaService {
 			e.setDislikes(s.getDislike().size());
 			e.setNumeroComentarios(c);
 			e.setNumeroCuestionario(s.getCuestionarios().size());
-			List<Resultados> listaResultados = rServices.obtenerResultados(idProyecto, formulario);
-			e.setResultados(listaResultados);
 			eRepository.save(e);
+		} else {
+
 		}
 
 	}
 
-//  ****************************	FUNCIONES TOLERANCIA A FALLOS	***********************************  //
-
-	private Boolean existsRespuestas(Integer idProyecto, Integer formulario, Throwable er) {
-		log.info(er.getMessage());
-		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Servicio Respuestas no esta disponible");
+	@Override
+	public Estadisticas verEstadistica(Integer idProyecto, Integer formulario) {
+		Estadisticas e = eRepository.findByIdProyecto(idProyecto);
+		List<Resultados> r = rRepository.findByIdProyectoAndFormulario(idProyecto, formulario);
+		e.setResultados(r);
+		eRepository.save(e);
+		return e;
 	}
+
+//  ****************************	FUNCIONES TOLERANCIA A FALLOS	***********************************  //
 
 	private Suscripciones obtenerSuscripciones(Integer idProyecto, Throwable e) {
 		log.info(e.getMessage());

@@ -46,7 +46,7 @@ public class Resultados {
 	@Indexed(unique = false)
 	private List<String> opciones;
 
-	@NotNull(message = "opciones be null")
+	@NotNull(message = "mensajeImpacto be null")
 	@Indexed(unique = false)
 	private List<String> mensajeImpacto;
 

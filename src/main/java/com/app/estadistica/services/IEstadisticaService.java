@@ -1,5 +1,11 @@
 package com.app.estadistica.services;
 
+import java.io.IOException;
+
+import org.springframework.web.server.ResponseStatusException;
+
+import com.app.estadistica.models.Estadisticas;
+
 public interface IEstadisticaService {
 
 	public void crearEstadisticas(Integer idProyecto);
@@ -8,6 +14,8 @@ public interface IEstadisticaService {
 
 	public Integer verVisualizaciones(Integer idProyecto);
 
-	public void obtenerEstadistica(Integer idProyecto, Integer formulario);
+	public void obtenerEstadisticaProyecto(Integer idProyecto) throws IOException, ResponseStatusException;
+
+	public Estadisticas verEstadistica(Integer idProyecto, Integer formulario);
 
 }

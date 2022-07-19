@@ -22,17 +22,25 @@ public interface ResultadosRepository extends MongoRepository<Resultados, String
 	public List<Resultados> findByIdProyectoAndFormulario(@Param("idProyecto") Integer idProyecto,
 			@Param("formulario") Integer formulario);
 
-	@RestResource(path = "delete-resultado-formulario-numeroPregunta")
-	public void deleteByIdProyectoAndFormularioAndNumeroPregunta(@Param("idProyecto") Integer idProyecto,
-			@Param("formulario") Integer formulario, @Param("numeroPregunta") Integer numeroPregunta);
-
 	@RestResource(path = "find-resultado-id")
 	public Resultados findByIdProyecto(@Param("idProyecto") Integer idProyecto);
 
 	@RestResource(path = "exist-resultado")
 	public Boolean existsByIdProyecto(@Param("idProyecto") Integer idProyecto);
 
+	@RestResource(path = "exist-resultado-formulario")
+	public Boolean existsByIdProyectoAndFormulario(@Param("idProyecto") Integer idProyecto,
+			@Param("formulario") Integer formulario);
+
 	@RestResource(path = "delete-id")
 	public void deleteByIdProyecto(@Param("idProyecto") Integer idProyecto);
+
+	@RestResource(path = "delete-id-formulario")
+	public void deleteByIdProyectoAndFormulario(@Param("idProyecto") Integer idProyecto,
+			@Param("formulario") Integer formulario);
+
+	@RestResource(path = "delete-resultado-formulario-numeroPregunta")
+	public void deleteByIdProyectoAndFormularioAndNumeroPregunta(@Param("idProyecto") Integer idProyecto,
+			@Param("formulario") Integer formulario, @Param("numeroPregunta") Integer numeroPregunta);
 
 }
