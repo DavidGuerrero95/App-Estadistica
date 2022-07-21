@@ -202,16 +202,15 @@ public class ResultadosServices implements IResultadosServices {
 			resultado.setImpacto(impacto);
 			break;
 		case 2: // 100 DOLARES
-			respuestas.forEach(r -> {
-				r.getRespuestas().forEach(ur -> {
-					int i = r.getRespuestas().indexOf(ur);
-					promedio.set(i, promedio.get(i) + Double.parseDouble(ur));
-				});
-			});
+			for (int i = 0; i < respuestas.size(); i++) {
+				for (int j = 0; j < respuestas.get(i).getRespuestas().size(); j++) {
+					promedio.set(j, promedio.get(j) + Double.parseDouble(respuestas.get(i).getRespuestas().get(j)));
+				}
+			}
 			if (errors)
 				log.info("promedio: " + promedio);
 			for (int i = 0; i < promedio.size(); i++) {
-				promedio.set(i, promedio.get(i) * resultado.getNumeroPersonas() / 100);
+				promedio.set(i, promedio.get(i) / resultado.getNumeroPersonas());
 			}
 			if (errors)
 				log.info("promedio dividido: " + promedio);
@@ -236,7 +235,7 @@ public class ResultadosServices implements IResultadosServices {
 				log.info("respuestas usuario: " + respUsuario);
 			}
 			for (int i = 0; i < promedio.size(); i++) {
-				promedio.set(i, (double) (personasOpcion.get(i) * resultado.getNumeroPersonas() / 100));
+				promedio.set(i, (double) (personasOpcion.get(i) * 100 / resultado.getNumeroPersonas()));
 			}
 			if (errors)
 				log.info("promedio: " + promedio);
@@ -301,7 +300,7 @@ public class ResultadosServices implements IResultadosServices {
 			if (errors)
 				log.info("personas Opcion: " + personasOpcion);
 			for (int i = 0; i < promedio.size(); i++) {
-				promedio.set(i, (double) (personasOpcion.get(i) * resultado.getNumeroPersonas() / 100));
+				promedio.set(i, (double) (personasOpcion.get(i) * 100 / resultado.getNumeroPersonas()));
 			}
 			if (errors)
 				log.info("promedio: " + promedio);
