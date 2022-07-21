@@ -18,5 +18,6 @@ public interface RespuestasFeignClient {
 
 	@GetMapping("/respuestas/ver/todas/pregunta/proyecto/{idProyecto}")
 	public List<Respuestas> verRespuestasPreguntaProyecto(@PathVariable("idProyecto") Integer idProyecto,
-			@RequestParam("numeroPregunta") Integer numeroPregunta, @RequestParam("formulario") Integer formulario);
+			@RequestParam("numeroPregunta") Integer numeroPregunta,
+			@RequestParam(value = "formulario", defaultValue = "1") Integer formulario);
 }

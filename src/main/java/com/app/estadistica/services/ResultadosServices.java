@@ -1,7 +1,5 @@
 package com.app.estadistica.services;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class ResultadosServices implements IResultadosServices {
+
+	private final boolean errors = true;
 
 	@SuppressWarnings("rawtypes")
 	@Autowired
@@ -48,8 +48,8 @@ public class ResultadosServices implements IResultadosServices {
 		r.setMensajeImpacto(mensajeImpacto);
 		r.setNumeroPersonas(0);
 		switch (r.getTipoConsulta()) {
-		case 1:
-			List<Double> pP = new ArrayList<Double>();
+		case 1: // UBICAR POR PREFERENCIA
+			List<Double> pP = new ArrayList<Double>(Collections.nCopies(r.getOpciones().size(), 0.0));
 			List<String> i = new ArrayList<String>();
 			r.getOpciones().forEach(x -> {
 				pP.add(0.0);
@@ -63,11 +63,8 @@ public class ResultadosServices implements IResultadosServices {
 			r.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 			r.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
 			break;
-		case 2:
-			List<Double> p = new ArrayList<Double>();
-			r.getOpciones().forEach(x -> {
-				p.add(0.0);
-			});
+		case 2: // 100 DOLARES
+			List<Double> p = new ArrayList<Double>(Collections.nCopies(r.getOpciones().size(), 0.0));
 			r.setPromedio(p);
 			r.setMayorEscogida("mayor");
 			r.setMenorEscogida("menor");
@@ -76,13 +73,9 @@ public class ResultadosServices implements IResultadosServices {
 			r.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 			r.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
 			break;
-		case 3:
-			List<Integer> personas = new ArrayList<Integer>();
-			List<Double> prom = new ArrayList<Double>();
-			r.getOpciones().forEach(x -> {
-				personas.add(0);
-				prom.add(0.0);
-			});
+		case 3: // SELECCION MULTIPLE
+			List<Integer> personas = new ArrayList<Integer>(Collections.nCopies(r.getOpciones().size(), 0));
+			List<Double> prom = new ArrayList<Double>(Collections.nCopies(r.getOpciones().size(), 0.0));
 			r.setPersonasOpcion(personas);
 			r.setRespuestas(new ArrayList<String>());
 			r.setPromedio(prom);
@@ -91,11 +84,10 @@ public class ResultadosServices implements IResultadosServices {
 			r.setMayorEscogida("-1");
 			r.setMenorEscogida("-1");
 			break;
-		case 4:
-			List<Double> pP4 = new ArrayList<Double>();
+		case 4: // BARRA DE VALOR
+			List<Double> pP4 = new ArrayList<Double>(Collections.nCopies(r.getOpciones().size(), 0.0));
 			List<String> i4 = new ArrayList<String>();
 			r.getOpciones().forEach(x -> {
-				pP4.add(0.0);
 				i4.add(mensajeImpacto.get(mensajeImpacto.size() - 1));
 			});
 			r.setPromedioPonderado(pP4);
@@ -106,7 +98,7 @@ public class ResultadosServices implements IResultadosServices {
 			r.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 			r.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
 			break;
-		case 5:
+		case 5: // PREGUNTA ABIERTA
 			List<String> resp = new ArrayList<String>();
 			r.setRespuestas(resp);
 			r.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
@@ -116,11 +108,8 @@ public class ResultadosServices implements IResultadosServices {
 			r.setMenorEscogida("-1");
 			r.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 			break;
-		case 6:
-			List<Double> pr6 = new ArrayList<Double>();
-			for (int j = 0; j < 6; j++) {
-				pr6.add((double) 0);
-			}
+		case 6: // KANO
+			List<Double> pr6 = new ArrayList<Double>(Collections.nCopies(r.getOpciones().size(), 0.0));
 			r.setPromedioPonderado(pr6);
 			r.setMayorEscogida("Sin respuestas");
 			r.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
@@ -129,13 +118,15 @@ public class ResultadosServices implements IResultadosServices {
 			r.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 			r.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
 			break;
-		case 7:
+		case 7: // LIKERT
+			List<Integer> pO7 = new ArrayList<Integer>(Collections.nCopies(r.getOpciones().size(), 0));
+			List<Double> p7 = new ArrayList<Double>(Collections.nCopies(r.getOpciones().size(), 0.0));
+			r.setPersonasOpcion(pO7); // <- ESTA
+			r.setPromedio(p7); // <- Porcentaje
 			r.setPromedioPonderado(new ArrayList<Double>(Arrays.asList(-1.0)));
 			r.setMayorEscogida("-1");
 			r.setImpacto(new ArrayList<String>(Arrays.asList("-1")));
-			r.setPromedio(new ArrayList<Double>(Arrays.asList(-1.0)));
 			r.setMenorEscogida("-1");
-			r.setPersonasOpcion(new ArrayList<Integer>(Arrays.asList(-1)));
 			r.setRespuestas(new ArrayList<String>(Arrays.asList("-1")));
 			break;
 		default:
@@ -148,33 +139,50 @@ public class ResultadosServices implements IResultadosServices {
 	public void obtenerEstadisticaResultados(Integer idProyecto, Integer formulario, Integer numeroPregunta) {
 		Resultados resultado = rRepository.findByIdProyectoAndFormularioAndNumeroPregunta(idProyecto, formulario,
 				numeroPregunta);
-		resultado.setNumeroPersonas(resultado.getNumeroPersonas() + 1);
+		if (errors)
+			log.info("Resultado existe");
+
 		List<Respuestas> respuestas = cbFactory.create("respuestas").run(
 				() -> rClient.verRespuestasPreguntaProyecto(idProyecto, numeroPregunta, formulario),
 				e -> encontrarRespuestasPreguntaProyecto(e));
+		if (errors)
+			log.info("Longitud respuestas: " + respuestas.size());
+		resultado.setNumeroPersonas(respuestas.size());
+		if (errors)
+			log.info("Numero personas: " + resultado.getNumeroPersonas());
 		List<List<Double>> listaProm = new ArrayList<List<Double>>();
-		List<Double> promedioPonderado = new ArrayList<Double>();
+		List<Double> promedioPonderado = new ArrayList<Double>(
+				Collections.nCopies(resultado.getOpciones().size(), 0.0));
 		List<String> impacto = new ArrayList<String>();
-		List<Double> promedio = new ArrayList<Double>();
+		List<Double> promedio = new ArrayList<Double>(Collections.nCopies(resultado.getOpciones().size(), 0.0));
+		List<String> respUsuario = new ArrayList<String>();
+		List<Integer> personasOpcion = new ArrayList<Integer>(Collections.nCopies(resultado.getOpciones().size(), 0));
 		switch (resultado.getTipoConsulta()) {
-		case 1:
-
+		case 1: // ESCOJENCIA POR PREFERENCIA
 			Double prom = (double) (100 / resultado.getOpciones().size());
+			if (errors)
+				log.info("Promedio: " + prom);
 			respuestas.forEach(x -> {
 				List<Double> l = new ArrayList<Double>(Collections.nCopies(resultado.getOpciones().size(), 0.0));
 				x.getRespuestas().forEach(y -> {
 					l.set(resultado.getOpciones().indexOf(y), 100.0 - (prom * x.getRespuestas().indexOf(y)));
+					if (errors)
+						log.info("lista arreglo: " + l);
 				});
 				listaProm.add(l);
 			});
+			if (errors)
+				log.info("lista prom: " + listaProm);
 			for (int i = 0; i < resultado.getOpciones().size(); i++) {
 				Double val = 0.0;
 				for (int j = 0; j < listaProm.size(); j++) {
 					val += listaProm.get(j).get(i);
 				}
 				val /= resultado.getNumeroPersonas();
-				promedioPonderado.add(val);
+				promedioPonderado.set(i, val);
 			}
+			if (errors)
+				log.info("promedio ponderado: " + promedioPonderado);
 			for (int j = 0; j < promedioPonderado.size(); j++) {
 				if (promedioPonderado.get(j) >= 80) {
 					impacto.add(resultado.getMensajeImpacto().get(0));
@@ -188,55 +196,55 @@ public class ResultadosServices implements IResultadosServices {
 					impacto.add(resultado.getMensajeImpacto().get(4));
 				}
 			}
+			if (errors)
+				log.info("pass7");
 			resultado.setPromedioPonderado(promedioPonderado);
 			resultado.setImpacto(impacto);
 			break;
-		case 2:
-			for (int i = 0; i < respuestas.size(); i++) {
-				promedio.add(0.0);
-				for (int j = 0; j < respuestas.get(i).getRespuestas().size(); j++) {
-					promedio.set(j, promedio.get(j) + Double.parseDouble(respuestas.get(i).getRespuestas().get(j)));
-				}
-				Double operacion = promedio.get(i) / resultado.getNumeroPersonas();
-				promedio.set(i, operacion);
+		case 2: // 100 DOLARES
+			respuestas.forEach(r -> {
+				r.getRespuestas().forEach(ur -> {
+					int i = r.getRespuestas().indexOf(ur);
+					promedio.set(i, promedio.get(i) + Double.parseDouble(ur));
+				});
+			});
+			if (errors)
+				log.info("promedio: " + promedio);
+			for (int i = 0; i < promedio.size(); i++) {
+				promedio.set(i, promedio.get(i) * resultado.getNumeroPersonas() / 100);
 			}
+			if (errors)
+				log.info("promedio dividido: " + promedio);
 			resultado.setPromedio(promedio);
 			resultado.setMayorEscogida(resultado.getOpciones()
 					.get(promedio.indexOf(promedio.stream().max(Comparator.naturalOrder()).get())));
 			resultado.setMenorEscogida(resultado.getOpciones()
 					.get(promedio.indexOf(promedio.stream().min(Comparator.naturalOrder()).get())));
 			break;
-		case 3:
-			List<Integer> promedioOpcion3 = new ArrayList<Integer>(
-					Collections.nCopies(resultado.getOpciones().size(), 0));
-			List<String> respUsuario = new ArrayList<String>();
-			List<Integer> personasOpcion = new ArrayList<Integer>();
-
-			for (int i = 0; i < respuestas.size(); i++) {
-				for (int j = 0; j < respuestas.get(i).getRespuestas().size(); j++) {
-					if (resultado.getOpciones().contains(respuestas.get(i).getRespuestas().get(j))) {
-						int index = resultado.getOpciones().indexOf(respuestas.get(i).getRespuestas().get(j));
-						promedioOpcion3.set(index, promedioOpcion3.get(index) + 1);
+		case 3: // OPCION MULTIPLE
+			respuestas.forEach(r -> {
+				r.getRespuestas().forEach(ru -> {
+					if (resultado.getOpciones().contains(ru)) {
+						int i = resultado.getOpciones().indexOf(ru);
+						personasOpcion.set(i, personasOpcion.get(i) + 1);
 					} else
-						respUsuario.add(respuestas.get(i).getRespuestas().get(j));
-				}
+						respUsuario.add(ru);
+				});
+			});
+			if (errors) {
+				log.info("personas Opcion: " + personasOpcion);
+				log.info("respuestas usuario: " + respUsuario);
 			}
-
-			for (int j = 0; j < personasOpcion.size(); j++) {
-				double op1 = personasOpcion.get(j);
-				promedio.add((op1 / resultado.getNumeroPersonas()) * 100);
-			}
-
 			for (int i = 0; i < promedio.size(); i++) {
-				BigDecimal bD = new BigDecimal(promedio.get(i)).setScale(2, RoundingMode.HALF_UP);
-				Double d2 = bD.doubleValue();
-				promedio.set(i, d2);
+				promedio.set(i, (double) (personasOpcion.get(i) * resultado.getNumeroPersonas() / 100));
 			}
+			if (errors)
+				log.info("promedio: " + promedio);
 			resultado.setPersonasOpcion(personasOpcion);
 			resultado.setRespuestas(respUsuario);
 			resultado.setPromedio(promedio);
 			break;
-		case 4:
+		case 4: // BARRA PORCENTAJE
 			respuestas.forEach(x -> {
 				List<Double> r = new ArrayList<Double>();
 				for (String d : x.getRespuestas()) {
@@ -268,12 +276,13 @@ public class ResultadosServices implements IResultadosServices {
 			resultado.setPromedioPonderado(promedioPonderado);
 			resultado.setImpacto(impacto);
 			break;
-		case 5:
-			List<String> r = new ArrayList<String>();
-			for (int i = 0; i < r.size(); i++) {
-				respuestas.get(i).getRespuestas().forEach(resp -> r.add(resp));
-			}
-			resultado.setRespuestas(r);
+		case 5: // PREGUNTA ABIERTA
+			respuestas.forEach(r -> {
+				r.getRespuestas().forEach(ur -> {
+					respUsuario.add(ur);
+				});
+			});
+			resultado.setRespuestas(respUsuario);
 			break;
 		case 6: // KANO
 			List<Double> resultadoPersonas = tipoSeisPrimero(respuestas);
@@ -281,6 +290,23 @@ public class ResultadosServices implements IResultadosServices {
 			resultado.setMayorEscogida(tipoSeisSegundo(resultadoPersonas, resultado));
 			break;
 		case 7: // LIKERT
+			respuestas.forEach(r -> {
+				r.getRespuestas().forEach(ru -> {
+					if (resultado.getOpciones().contains(ru)) {
+						int i = resultado.getOpciones().indexOf(ru);
+						personasOpcion.set(i, personasOpcion.get(i) + 1);
+					}
+				});
+			});
+			if (errors)
+				log.info("personas Opcion: " + personasOpcion);
+			for (int i = 0; i < promedio.size(); i++) {
+				promedio.set(i, (double) (personasOpcion.get(i) * resultado.getNumeroPersonas() / 100));
+			}
+			if (errors)
+				log.info("promedio: " + promedio);
+			resultado.setPersonasOpcion(personasOpcion);
+			resultado.setPromedio(promedio);
 			break;
 		default:
 			break;
