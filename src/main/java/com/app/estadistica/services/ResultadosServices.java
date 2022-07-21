@@ -257,7 +257,7 @@ public class ResultadosServices implements IResultadosServices {
 					val += listaProm.get(j).get(i);
 				}
 				val /= resultado.getNumeroPersonas();
-				promedioPonderado.add(val);
+				promedioPonderado.set(i, val);
 			}
 			for (int j = 0; j < promedioPonderado.size(); j++) {
 				if (promedioPonderado.get(j) >= 80) {
